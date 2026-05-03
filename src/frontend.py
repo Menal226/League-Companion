@@ -18,20 +18,12 @@ def create_app() -> FastAPI:
                 yield {"data": html}
         return EventSourceResponse(generator())
 
-    @app.post("/queue/start", response_class=HTMLResponse)
-    async def queue_start() -> str:
-        try:
-            await lcu.request("post", "/lol-lobby/v2/lobby/matchmaking/search")
-            return '<span class="toast">Queue started</span>'
-        except RuntimeError as e:
-            return f'<span class="toast error">{e}</span>'
+    @app.post("/queue/start")
+    async def queue_start():
+        await lcu.request("post", "/lol-lobby/v2/lobby/matchmaking/search")
 
-    @app.post("/queue/stop", response_class=HTMLResponse)
-    async def queue_stop() -> str:
-        try:
-            await lcu.request("delete", "/lol-lobby/v2/lobby/matchmaking/search")
-            return '<span class="toast">Queue stopped</span>'
-        except RuntimeError as e:
-            return f'<span class="toast error">{e}</span>'
+    @app.post("/queue/stop")
+    async def queue_stop():
+        await lcu.request("delete", "/lol-lobby/v2/lobby/matchmaking/search")
 
     return app

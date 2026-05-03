@@ -85,3 +85,11 @@ async def on_champ_select(conn: Connection, event: WebsocketEventResponse):
 async def on_champ_select_exit(conn: Connection, event: WebsocketEventResponse):
     push('<tbody id="myteam-body" hx-swap-oob="true"><tr><td colspan="3" class="empty">Waiting for champ select…</td></tr></tbody>')
     push('<tbody id="theirteam-body" hx-swap-oob="true"><tr><td colspan="3" class="empty">Waiting for champ select…</td></tr></tbody>')
+
+@connector.ws.register("/lol-matchmaking/v1/search", event_types=("CREATE", "UPDATE"))
+async def on_queue(conn: Connection, event: WebsocketEventResponse):
+    push(f'<b id="queue_timer" hx-swap-oob="true"> Time: {event.data["timeInQueue"]}s</b>')
+
+@connector.ws.register("/lol-matchmaking/v1/search", event_types=("DELETE", ))
+async def on_queue_exit(conn: Connection, event: WebsocketEventResponse):
+    push('<b id="queue_timer" hx-swap-oob="true">Not in queue</b>')

@@ -16,14 +16,14 @@
       </header>
 
       <div class="actions">
-        <button hx-post="/queue/start" hx-target="#toast-target" hx-swap="innerHTML">
+        <button hx-post="/queue/start" hx-swap="none">
           Start queue
         </button>
-      <button hx-post="/queue/stop" hx-target="#toast-target" hx-swap="innerHTML">
+        <button hx-post="/queue/stop" hx-swap="none">
           Stop queue
         </button>
-        <div id="toast-target"></div>
       </div>
+      <b id="queue_timer">Not in queue</b>
 
       <h2>Champ select</h2>
       <div style="display: flex; gap: 20px">
