@@ -75,8 +75,13 @@ async def _process_team(conn: Connection, team_data):
 
 @connector.ws.register("/lol-champ-select/v1/session", event_types=("CREATE", "UPDATE"))
 async def on_champ_select(conn: Connection, event: WebsocketEventResponse):
-    if event.data["timer"]["phase"] != "BAN_PICK":
+    if event.data["timer"]["phase"] != "BAN_PICK" and event.data["timer"]["phase"] != "PLANNING":
         return
 
     push(f'<tbody id="myteam-body" hx-swap-oob="true">{await _process_team(conn, event.data["myTeam"])}</tbody>')
     push(f'<tbody id="theirteam-body" hx-swap-oob="true">{await _process_team(conn, event.data["theirTeam"])}</tbody>')
+
+@connector.ws.register("/lol-champ-select/v1/session", event_types=("DELETE", ))
+async def on_champ_select_exit(conn: Connection, event: WebsocketEventResponse):
+    push('<tbody id="myteam-body" hx-swap-oob="true"><tr><td colspan="3" class="empty">Waiting for champ select…</td></tr></tbody>')
+    push('<tbody id="theirteam-body" hx-swap-oob="true"><tr><td colspan="3" class="empty">Waiting for champ select…</td></tr></tbody>')
