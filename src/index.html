@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Companion</title>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script src="https://unpkg.com/htmx-ext-sse@2.2.2/sse.js"></script>
+  </head>
+  <body>
+    <div hx-ext="sse" sse-connect="/sse" sse-swap="message" hx-swap="none"></div>
+    
+    <div class="container">
+      <header>
+        <h1>League Companion</h1>
+        <span id="status">● Connected</span>
+      </header>
+
+      <div class="actions">
+        <button hx-post="/queue/start" hx-target="#toast-target" hx-swap="innerHTML">
+          Start queue
+        </button>
+      <button hx-post="/queue/stop" hx-target="#toast-target" hx-swap="innerHTML">
+          Stop queue
+        </button>
+        <div id="toast-target"></div>
+      </div>
+
+      <h2>Champ select</h2>
+      <div style="display: flex; gap: 20px">
+        <div>
+          <h3>My Team</h3>
+          <table style="border-collapse: separate; border-spacing: 20px 0;">
+            <thead>
+              <tr>
+                <th>Summoner</th>
+                <th>Champion</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="myteam-body">
+              <tr>
+                <td colspan="3" class="empty">Waiting for champ select…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div>
+          <h3>Enemy Team</h3>
+          <table style="border-collapse: separate; border-spacing: 20px 0;">
+            <thead>
+              <tr>
+                <th>Summoner</th>
+                <th>Champion</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="theirteam-body">
+              <tr>
+                <td colspan="3" class="empty">Waiting for champ select…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
