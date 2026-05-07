@@ -22,7 +22,10 @@
         <button hx-post="/queue/stop" hx-swap="none">
           Stop queue
         </button>
-        <input hx-post="/queue/toggle" hx-swap="none" type="checkbox">
+        <div>
+          <input hx-post="/queue/toggle" hx-swap="none" type="checkbox">
+          <b>Auto-accept queue</b>
+        </div>
       </div>
       <b id="queue_timer">Not in queue</b>
 
@@ -62,6 +65,11 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+      <div id="aram-bench">
+        <h3>Team Bench</h3>
+        <div id="bench-champs">
         </div>
       </div>
     </div>

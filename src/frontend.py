@@ -30,4 +30,8 @@ def create_app() -> FastAPI:
     async def queue_aa_toggle():
         lcu.toggle_autoaccept()
 
+    @app.post("/lobby/bench/swap/{champion_id}")
+    async def swap_champ_from_bench(champion_id: int):
+        await lcu.request("POST", f"/lol-champ-select/v1/session/bench/swap/{champion_id}")
+
     return app

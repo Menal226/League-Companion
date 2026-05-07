@@ -28,6 +28,7 @@ async def request(method: str, path: str) -> ClientResponse:
         connection.request(method, path),
         connector_loop,
     )
+
     return await asyncio.get_event_loop().run_in_executor(None, future.result)
 
 def start():
@@ -61,35 +62,52 @@ async def _champion_name(conn: Connection, champion_id: int) -> str:
         return "Unknown"
     return (await resp.json()).get("name", "Unknown")
 
-async def _process_team(conn: Connection, team_data):
-    team = []
-    for mate in team_data:
-        champ_id = mate["championId"] or mate["championPickIntent"]
-        team.append({
-            "name": mate.get("gameName", "Hidden"),
-            "champion": await _champion_name(conn, champ_id),
-            "locked": mate["championId"] != 0,
-        })
+def _champion_icon(champion_id: int) -> str:
+    CD_ICONS = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/"
+    if champion_id <= 0:
+        return f"{CD_ICONS}-1.png"
+    return f"{CD_ICONS}{champion_id}.png"
 
+async def _process_team(conn: Connection, team_data):
     rows = ""
-    for p in team:
-        label = "Locked in" if p["locked"] else "Hovering"
-        rows += f"<tr><td>{p['name']}</td><td>{p['champion']}</td><td>{label}</td></tr>"
+    for player in team_data:
+        champ_id = player["championId"] or player["championPickIntent"]
+        label = "Locked in" if champ_id == player["championId"] else "Hovering"
+        rows += f"<tr><td>{player.get("gameName", "Hidden")}</td><td>{_champion_name(champ_id)}</td><td>{label}</td></tr>"
+        print(player)
 
     return rows
 
-@connector.ws.register("/lol-champ-select/v1/session", event_types=("CREATE", "UPDATE"))
-async def on_champ_select(conn: Connection, event: WebsocketEventResponse):
+async def update_teams(conn: Connection, event: WebsocketEventResponse):
     if event.data["timer"]["phase"] != "BAN_PICK" and event.data["timer"]["phase"] != "PLANNING":
         return
 
     push(f'<tbody id="myteam-body" hx-swap-oob="true">{await _process_team(conn, event.data["myTeam"])}</tbody>')
     push(f'<tbody id="theirteam-body" hx-swap-oob="true">{await _process_team(conn, event.data["theirTeam"])}</tbody>')
 
+def update_aram_bench(event: WebsocketEventResponse):
+    if not event.data["benchEnabled"]:
+        return
+    
+    result = ""
+    for champ in event.data["benchChampions"]:
+        result += f'<img src="{_champion_icon(champ["championId"])}" hx-trigger="click" hx-post="/lobby/bench/swap/{champ["championId"]}" hx-swap="none">'
+
+
+    push(f'<div id="bench-champs" hx-swap-oob="true">{result}</div>')
+    
+
+@connector.ws.register("/lol-champ-select/v1/session", event_types=("CREATE", "UPDATE"))
+async def on_champ_select(conn: Connection, event: WebsocketEventResponse):
+    await update_teams(conn, event)
+    update_aram_bench(event)
+
+
 @connector.ws.register("/lol-champ-select/v1/session", event_types=("DELETE", ))
 async def on_champ_select_exit(conn: Connection, event: WebsocketEventResponse):
     push('<tbody id="myteam-body" hx-swap-oob="true"><tr><td colspan="3" class="empty">Waiting for champ select…</td></tr></tbody>')
     push('<tbody id="theirteam-body" hx-swap-oob="true"><tr><td colspan="3" class="empty">Waiting for champ select…</td></tr></tbody>')
+    push('<div id="bench-champs" hx-swap-oob="true"></div>')
 
 @connector.ws.register("/lol-matchmaking/v1/search", event_types=("CREATE", "UPDATE"))
 async def on_queue(conn: Connection, event: WebsocketEventResponse):
