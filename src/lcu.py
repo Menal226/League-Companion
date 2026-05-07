@@ -73,7 +73,7 @@ async def _process_team(conn: Connection, team_data):
     for player in team_data:
         champ_id = player["championId"] or player["championPickIntent"]
         label = "Locked in" if champ_id == player["championId"] else "Hovering"
-        rows += f"<tr><td>{player.get("gameName", "Hidden")}</td><td>{_champion_name(champ_id)}</td><td>{label}</td></tr>"
+        rows += f"<tr><td>{player.get("gameName", "Hidden")}</td><td>{await _champion_name(conn, champ_id)}</td><td>{label}</td></tr>"
         print(player)
 
     return rows
