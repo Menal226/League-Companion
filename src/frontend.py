@@ -8,7 +8,7 @@ def create_app() -> FastAPI:
 
     @app.get("/", response_class=HTMLResponse)
     async def index() -> HTMLResponse:
-        return HTMLResponse(open("index.html", encoding="utf-8").read())
+        return HTMLResponse(open(r"C:\Users\micha\Desktop\League Companion\src\index.html", encoding="utf-8").read())
 
     @app.get("/sse")
     async def sse(request: Request) -> EventSourceResponse:
@@ -25,5 +25,9 @@ def create_app() -> FastAPI:
     @app.post("/queue/stop")
     async def queue_stop():
         await lcu.request("delete", "/lol-lobby/v2/lobby/matchmaking/search")
+    
+    @app.post("/queue/toggle")
+    async def queue_aa_toggle():
+        lcu.toggle_autoaccept()
 
     return app

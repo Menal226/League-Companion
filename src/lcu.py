@@ -11,6 +11,7 @@ connector_loop: asyncio.AbstractEventLoop | None = None
 
 event_queue: asyncio.Queue = asyncio.Queue()
 main_loop: asyncio.AbstractEventLoop | None = None
+auto_accept = False
 
 def set_main_loop(loop: asyncio.AbstractEventLoop):
     global main_loop
@@ -32,6 +33,10 @@ async def request(method: str, path: str) -> ClientResponse:
 def start():
     thread = threading.Thread(target=connector.start, daemon=True)
     thread.start()
+
+def toggle_autoaccept():
+    global auto_accept
+    auto_accept = not auto_accept
 
 
 @connector.ready
@@ -93,3 +98,10 @@ async def on_queue(conn: Connection, event: WebsocketEventResponse):
 @connector.ws.register("/lol-matchmaking/v1/search", event_types=("DELETE", ))
 async def on_queue_exit(conn: Connection, event: WebsocketEventResponse):
     push('<b id="queue_timer" hx-swap-oob="true">Not in queue</b>')
+
+@connector.ws.register("/lol-matchmaking/v1/ready-check", event_types=("UPDATE",))
+async def on_queue_pop(conn: Connection, event: WebsocketEventResponse):
+    if event.data["playerResponse"] != "None" or not auto_accept:
+        return
+    
+    await conn.request("POST", "/lol-matchmaking/v1/ready-check/accept")
