@@ -2,13 +2,14 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from sse_starlette.sse import EventSourceResponse
 import lcu
+from pathlib import Path
 
 def create_app() -> FastAPI:
     app = FastAPI()
 
     @app.get("/", response_class=HTMLResponse)
     async def index() -> HTMLResponse:
-        return HTMLResponse(open(r"C:\Users\micha\Desktop\League Companion\src\index.html", encoding="utf-8").read())
+        return HTMLResponse(open(Path.cwd() / "src" / "champ_select" / "champ_select.html", encoding="utf-8").read())
 
     @app.get("/sse")
     async def sse(request: Request) -> EventSourceResponse:
