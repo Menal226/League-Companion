@@ -1,9 +1,9 @@
-import asyncio
-from contextlib import asynccontextmanager
-from fastapi import FastAPI
-import uvicorn
 import lcu
+import uvicorn
+import asyncio
+from fastapi import FastAPI
 from frontend import create_app
+from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
