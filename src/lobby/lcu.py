@@ -12,7 +12,7 @@ def toggle_autoaccept():
 def register(connector: Connector):
     @connector.ws.register("/lol-matchmaking/v1/search", event_types=("CREATE", "UPDATE"))
     async def on_queue(conn: Connection, event: WebsocketEventResponse):
-        push(f'<b id="queue_timer" hx-swap-oob="true"> Time: {event.data["timeInQueue"]}s</b>')
+        push(f'<b id="queue_timer" hx-swap-oob="true"> Time: {event.data["timeInQueue"]}s (est. {int(event.data["estimatedQueueTime"])}s)</b>')
 
     @connector.ws.register("/lol-matchmaking/v1/search", event_types=("DELETE", ))
     async def on_queue_exit(conn: Connection, event: WebsocketEventResponse):
