@@ -20,7 +20,6 @@ def register(connector: Connector):
 
     @connector.ws.register("/lol-matchmaking/v1/ready-check", event_types=("UPDATE",))
     async def on_queue_pop(conn: Connection, event: WebsocketEventResponse):
-        
         if event.data["playerResponse"] != "None" or not auto_accept:
             return
         

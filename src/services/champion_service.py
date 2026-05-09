@@ -1,13 +1,16 @@
+import base64
 from opgg import OPGG
 from lcu_driver.connection import Connection
 
-CD_ADDR = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/"
 opgg = OPGG()
 
-def get_icon(champion_id: int) -> str:
+async def get_icon(conn: Connection, champion_id: int) -> str:
     if champion_id <= 0:
-        return f"{CD_ADDR}-1.png"
-    return f"{CD_ADDR}{champion_id}.png"
+        champion_id = -1
+    resp = await conn.request("get", f"/lol-game-data/assets/v1/champion-icons/{champion_id}.png")
+    data = await resp.read()
+    encoded = base64.b64encode(data).decode("ascii")
+    return f"data:image/png;base64,{encoded}"
 
 async def get_name(conn: Connection, champion_id: int) -> str:
     if champion_id == 0:
