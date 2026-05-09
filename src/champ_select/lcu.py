@@ -1,23 +1,27 @@
 from lcu import push
+from pathlib import Path
 from lcu_driver import Connector
 from lcu_driver.connection import Connection
 from services import champion_service, spells_service
 from lcu_driver.events.responses import WebsocketEventResponse
 
 def register(connector: Connector):
-    @connector.ws.register("/lol-champ-select/v1/session", event_types=("CREATE", "UPDATE"))
-    async def on_champ_select(conn: Connection, event: WebsocketEventResponse):
+    @connector.ws.register("/lol-champ-select/v1/session", event_types=("CREATE", ))
+    async def on_champ_select_create(conn: Connection, event: WebsocketEventResponse):
+        push(open(Path("src/champ_select/index.html"), encoding="utf-8").read())
+        await on_champ_select_update(conn, event)
+
+    @connector.ws.register("/lol-champ-select/v1/session", event_types=("UPDATE", ))
+    async def on_champ_select_update(conn: Connection, event: WebsocketEventResponse):
         await update_teams(event)
         update_bans(event)
         update_aram_bench(event)
 
     @connector.ws.register("/lol-champ-select/v1/session", event_types=("DELETE", ))
-    async def on_champ_select_exit(conn: Connection, event: WebsocketEventResponse):
-        push('<div id="my-team" hx-swap-oob="true"><b>Waiting for champ select to begin</b></div>')
-        push('<div id="their-team" hx-swap-oob="true"><b>Waiting for champ select to begin</b></div>')
-        push('<div id="aram-bench" hx-swap-oob="true"></div>')
-        push('<div id="my-team-bans" hx-swap-oob="true"></div>')
-        push('<div id="their-team-bans" hx-swap-oob="true"></div>')
+    async def on_champ_select_delete(conn: Connection, event: WebsocketEventResponse):
+        # im not sure how to implement redirects prompted by the server so im just rending the container
+        # hmlt and stay on the same url
+        push(open(Path("src/lobby/index.html"), encoding="utf-8").read())
 
 
 def create_my_team_player(player_info) -> str:
@@ -71,7 +75,7 @@ def update_aram_bench(event: WebsocketEventResponse):
     if not event.data["benchEnabled"]:
         return
 
-    result = "".join([f'<img src="{champion_service.get_icon(champ["championId"])}" hx-trigger="click" hx-post="/lobby/bench/swap/{champ["championId"]}" hx-swap="none" class="bench-champ-icon">' for champ in event.data["benchChampions"]])
+    result = "".join([f'<img src="{champion_service.get_icon(champ["championId"])}" hx-trigger="click" hx-post="/champ-select/bench/swap/{champ["championId"]}" hx-swap="none" class="bench-champ-icon">' for champ in event.data["benchChampions"]])
     push(f'<div id="aram-bench" hx-swap-oob="true">{result}</div>')
 
 # /lol-lobby-team-builder/champ-select/v1/subset-champion-list

@@ -1,7 +1,8 @@
 import asyncio
 import threading
-from aiohttp import ClientResponse
+from pathlib import Path
 from lcu_driver import Connector
+from aiohttp import ClientResponse
 from lcu_driver.connection import Connection
 
 connector = Connector()
@@ -30,10 +31,13 @@ async def request(method: str, path: str) -> ClientResponse:
     return await asyncio.get_event_loop().run_in_executor(None, future.result)
 
 def start():
-    from champ_select import lcu_champ_select
-    from lobby import lcu_lobby
-    lcu_champ_select.register(connector)
-    lcu_lobby.register(connector)
+    # prevent circular import
+    from champ_select import lcu as lcu_cs
+    from lobby import lcu as lcu_l
+    lcu_cs.register(connector)
+    lcu_l.register(connector)
+    # force existing pages to reset
+    event_queue.put_nowait(open(Path("src/lobby/index.html"), encoding="utf-8").read())
     thread = threading.Thread(target=connector.start, daemon=True)
     thread.start()
 
@@ -43,11 +47,10 @@ async def on_connect(conn: Connection):
     global connection, connector_loop
     connection = conn
     connector_loop = asyncio.get_event_loop()
-    push('<span id="status" hx-swap-oob="true">● Connected</span>')
+
 
 @connector.close
 async def on_disconnect(_):
     global connection, connector_loop
     connection = None
     connector_loop = None
-    push('<span id="status" hx-swap-oob="true">○ Disconnected</span>')

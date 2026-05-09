@@ -1,5 +1,5 @@
-from lcu_driver.connection import Connection
 from opgg import OPGG
+from lcu_driver.connection import Connection
 
 CD_ADDR = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/"
 opgg = OPGG()
