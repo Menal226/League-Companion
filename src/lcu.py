@@ -20,11 +20,11 @@ def push(html: str):
     if main_loop:
         main_loop.call_soon_threadsafe(event_queue.put_nowait, html)
 
-async def request(method: str, path: str) -> ClientResponse:
+async def request(method: str, path: str, **kwargs) -> ClientResponse:
     if connection is None or connector_loop is None:
         raise RuntimeError("Not connected to League")
     future = asyncio.run_coroutine_threadsafe(
-        connection.request(method, path),
+        connection.request(method, path, **kwargs),
         connector_loop,
     )
 

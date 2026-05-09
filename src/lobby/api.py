@@ -14,3 +14,8 @@ def register(app: FastAPI):
     @app.post("/lobby/queue/toggle")
     async def queue_aa_toggle():
         lcu_l.toggle_autoaccept()
+
+    @app.post("/lobby/create/{queueId}")
+    async def create_lobby(queueId: int):
+        await lcu.request("delete", "/lol-lobby/v2/lobby")
+        await lcu.request("post", "/lol-lobby/v2/lobby", json = {"queueId": queueId})

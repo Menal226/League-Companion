@@ -1,12 +1,19 @@
 <div id="container" hx-swap-oob="true">
   <div id="holder">
-    <div>
-      <button hx-post="/lobby/queue/start" hx-swap="none">
-        Start queue
-      </button>
-      <button hx-post="/lobby/queue/stop" hx-swap="none">
-        Stop queue
-      </button>
+    <div id="instant-buttons">
+      <button hx-post="/lobby/create/2400" hx-swap="none">Start ARAM - Mayhem</button>
+      <button hx-post="/lobby/create/480" hx-swap="none">Start Swiftplay</button>
+      <button hx-post="/lobby/create/420" hx-swap="none">Start SoloQ</button>
+    </div>
+    <div id="queue-control">
+      <div>
+        <button hx-post="/lobby/queue/start" hx-swap="none">
+          Start queue
+        </button>
+        <button hx-post="/lobby/queue/stop" hx-swap="none">
+          Stop queue
+        </button>
+      </div>
       <div>
         <input hx-post="/lobby/queue/toggle" hx-swap="none" type="checkbox">
         <b>Auto-accept queue</b>
