@@ -1,3 +1,5 @@
+from operator import index
+
 from lcu import push
 from pathlib import Path
 from lcu_driver import Connector
@@ -6,6 +8,8 @@ from services import champion_service, spells_service
 from lcu_driver.events.responses import WebsocketEventResponse
 
 in_game = False
+players = [{} for _ in range(10)]
+bench = [0 for _ in range(10)]
 
 def register(connector: Connector):
     @connector.ws.register("/lol-champ-select/v1/session", event_types=("CREATE", ))
@@ -15,40 +19,54 @@ def register(connector: Connector):
 
     @connector.ws.register("/lol-champ-select/v1/session", event_types=("UPDATE", ))
     async def on_champ_select_update(conn: Connection, event: WebsocketEventResponse):
+        await update_aram_bench(conn, event)
         await update_teams(conn, event)
         await update_bans(conn, event)
-        await update_aram_bench(conn, event)
 
     @connector.ws.register("/lol-champ-select/v1/session", event_types=("DELETE", ))
     async def on_champ_select_delete(conn: Connection, event: WebsocketEventResponse):
         # im not sure how to implement redirects prompted by the server so im just rending the container
         # hmlt and stay on the same url
+        global players, bench
+        players = [{} for _ in range(10)]
+        bench = [0 for _ in range(10)]
         push(open(Path("src/lobby/index.html"), encoding="utf-8").read())
 
-
-async def create_my_team_player(conn: Connection, player_info) -> str:
+async def create_my_team_player(conn: Connection, player_info, index: int) -> str:
+    global players
     champ_id = player_info["championId"] or player_info["championPickIntent"]
-    champ_icon = await champion_service.get_icon(conn, champ_id)
+    last_state = players[player_info["cellId"]]
+    if champ_id == (last_state.get("championId") or last_state.get("championPickIntent")) and player_info["spell1Id"] == last_state.get("spell1Id") and player_info["spell2Id"] == last_state.get("spell2Id"):
+        return ""
+
+    players[player_info["cellId"]] = player_info
     spell1 = spells_service.get_icon(player_info["spell1Id"])
     spell2 = spells_service.get_icon(player_info["spell2Id"])
-    return f'<div class="player-lobby-info"><img src="{champ_icon}" class="player-champ-icon"><div><b style="font-size: 1rem;">{player_info.get("gameName", "Hidden")}</b><div><img src="{spell1}" class="player-summoner"><img src="{spell2}" class="player-summoner"></div></div></div>'
+    champ_icon = await champion_service.get_icon(conn, champ_id)
+    return f'<div class="player-lobby-info" hx-swap-oob="true" id="my-player-{index}"><img src="{champ_icon}" class="player-champ-icon"><div><b style="font-size: 1rem;">{player_info.get("gameName", "Hidden")}</b><div><img src="{spell1}" class="player-summoner"><img src="{spell2}" class="player-summoner"></div></div></div>'
 
-async def create_my_team_panel(conn: Connection, team_data) -> str:
-    return "".join([await create_my_team_player(conn, player) for player in team_data])
 
-async def create_their_team_player(conn: Connection, player_info) -> str:
-    champ_id = player_info["championId"]
+async def create_their_team_player(conn: Connection, player_info, index: int) -> str:
+    global players
+    champ_id = player_info["championId"] or player_info["championPickIntent"]
+    last_state = players[player_info["cellId"]]
+    if champ_id == (last_state.get("championId") or last_state.get("championPickIntent")):
+        return ""
+
+    players[player_info["cellId"]] = player_info
     champ_icon = await champion_service.get_icon(conn, champ_id)
     counter_ids = await champion_service.get_counter_ids(champ_id)
+    if (len(counter_ids) < 3):
+        for _ in range(3 - len(counter_ids)):
+            counter_ids.append(-1)
     counters = "".join([f'<img src="{await champion_service.get_icon(conn, c_id)}" class="player-summoner">' for c_id in counter_ids])
-    return f'<div class="player-lobby-info"><div><b style="font-size: 1rem;">Counters</b><div>{counters}</div></div><img src="{champ_icon}" class="player-champ-icon"></div>'
+    return f'<div class="player-lobby-info" hx-swap-oob="true" id="their-player-{index}"><div><b style="font-size: 1rem;">Counters</b><div>{counters}</div></div><img src="{champ_icon}" class="player-champ-icon"></div>'
 
-async def create_their_team_panel(conn: Connection, team_data) -> str:
-    return "".join([await create_their_team_player(conn, player) for player in team_data])
 
 async def update_teams(conn: Connection, event: WebsocketEventResponse):
-    push(f'<div id="my-team" hx-swap-oob="true">{await create_my_team_panel(conn, event.data["myTeam"])}</div>')
-    push(f'<div id="their-team" hx-swap-oob="true">{await create_their_team_panel(conn, event.data["theirTeam"])}</div>')
+    push("".join([await create_my_team_player(conn, player, i) for i, player in enumerate(event.data["myTeam"])]))
+    push("".join([await create_their_team_player(conn, player, i) for i, player in enumerate(event.data["theirTeam"])]))
+
 
 def gather_bans_from_actions(actions: list[dict]) -> tuple[list[int], list[int]]:
     my_team_bans: list[int] = []
@@ -69,15 +87,24 @@ async def create_team_bans_panel(conn: Connection, team_data: list[int]) -> str:
     return "".join([f'<img src="{await champion_service.get_icon(conn, ban_id)}" class="bench-champ-icon">' for ban_id in team_data])
 
 async def update_bans(conn: Connection, event: WebsocketEventResponse):
+    if event.data["timer"]["phase"] != "BAN_PICK":
+        return
     my_team_bans, their_team_bans = gather_bans_from_actions(event.data["actions"])
-    push(f'<div id="my-team-bans" hx-swap-oob="true">{await create_team_bans_panel(conn, my_team_bans)}</div>')
-    push(f'<div id="their-team-bans" hx-swap-oob="true">{await create_team_bans_panel(conn, their_team_bans)}</div>')
+    my_bans_html = f'<div id="my-team-bans" hx-swap-oob="true">{await create_team_bans_panel(conn, my_team_bans)}</div>'
+    their_bans_html = f'<div id="their-team-bans" hx-swap-oob="true">{await create_team_bans_panel(conn, their_team_bans)}</div>'
+    push(my_bans_html)
+    push(their_bans_html)
 
 async def update_aram_bench(conn: Connection, event: WebsocketEventResponse):
     if not event.data["benchEnabled"]:
         return
 
-    result = "".join([f'<img src="{await champion_service.get_icon(conn, champ["championId"])}" hx-trigger="click" hx-post="/champ-select/bench/swap/{champ["championId"]}" hx-swap="none" class="bench-champ-icon">' for champ in event.data["benchChampions"]])
-    push(f'<div id="aram-bench" hx-swap-oob="true">{result}</div>')
+    global bench
+    result = ""
+    for i, champ in enumerate(event.data["benchChampions"]):
+        if bench[i] != champ["championId"]:
+            bench[i] = champ["championId"]
+            result += f'<img src="{await champion_service.get_icon(conn, champ["championId"])}" hx-trigger="click" hx-post="/champ-select/bench/swap/{champ["championId"]}" hx-swap-oob="true" hx-swap="none" class="bench-champ-icon" id="bench-{i}">'
+    push(result)
 
 # /lol-lobby-team-builder/champ-select/v1/subset-champion-list

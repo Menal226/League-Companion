@@ -17,7 +17,7 @@ def set_main_loop(loop: asyncio.AbstractEventLoop):
     main_loop = loop
 
 def push(html: str):
-    if main_loop:
+    if main_loop and len(html) > 0:
         main_loop.call_soon_threadsafe(event_queue.put_nowait, html)
 
 async def request(method: str, path: str, **kwargs) -> ClientResponse:
