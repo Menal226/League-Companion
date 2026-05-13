@@ -6,6 +6,7 @@ from lcu_driver import Connector
 from lcu_driver.connection import Connection
 from services import champion_service, spells_service
 from lcu_driver.events.responses import WebsocketEventResponse
+from lobby.lcu import switch_screen as switch_to_lobby
 
 in_game = False
 players = [{} for _ in range(10)]
@@ -14,7 +15,7 @@ bench = [0 for _ in range(10)]
 def register(connector: Connector):
     @connector.ws.register("/lol-champ-select/v1/session", event_types=("CREATE", ))
     async def on_champ_select_create(conn: Connection, event: WebsocketEventResponse):
-        push(open(Path("src/champ_select/index.html"), encoding="utf-8").read())
+        switch_screen()
         await on_champ_select_update(conn, event)
 
     @connector.ws.register("/lol-champ-select/v1/session", event_types=("UPDATE", ))
@@ -30,7 +31,10 @@ def register(connector: Connector):
         global players, bench
         players = [{} for _ in range(10)]
         bench = [0 for _ in range(10)]
-        push(open(Path("src/lobby/index.html"), encoding="utf-8").read())
+        switch_to_lobby()
+
+def switch_screen():
+    push(open(Path("src/champ_select/index.html"), encoding="utf-8").read())
 
 async def create_my_team_player(conn: Connection, player_info, index: int) -> str:
     global players

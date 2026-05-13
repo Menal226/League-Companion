@@ -1,13 +1,10 @@
 from lcu import push
+from pathlib import Path
 from lcu_driver import Connector
 from lcu_driver.connection import Connection
 from lcu_driver.events.responses import WebsocketEventResponse
 
 auto_accept = False
-
-def toggle_autoaccept():
-    global auto_accept
-    auto_accept = not auto_accept
 
 def register(connector: Connector):
     @connector.ws.register("/lol-matchmaking/v1/search", event_types=("CREATE", "UPDATE"))
@@ -24,3 +21,12 @@ def register(connector: Connector):
             return
         
         await conn.request("POST", "/lol-matchmaking/v1/ready-check/accept")
+
+def toggle_autoaccept():
+    global auto_accept
+    auto_accept = not auto_accept
+
+def switch_screen():
+    push(open(Path("src/lobby/index.html"), encoding="utf-8").read())
+    if auto_accept:
+        push('<input hx-post="/lobby/queue/toggle" hx-swap-oob="true" hx-swap="none" type="checkbox" id="auto-accept-switch" checked>')
