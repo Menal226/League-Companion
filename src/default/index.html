@@ -60,6 +60,10 @@
         gap: 0.5rem;
         align-items: center;
       }
+      
+      .aram-portrait {
+        width: 10vw;
+      }
     </style>
   </head>
   <body>
@@ -81,7 +85,7 @@
             </button>
           </div>
           <div>
-            <input hx-post="/lobby/queue/toggle" hx-swap="none" type="checkbox">
+            <input hx-post="/lobby/queue/toggle" hx-swap="none" type="checkbox" id="auto-accept-switch">
             <b>Auto-accept queue</b>
           </div>
           <b id="queue_timer">Not in queue</b>

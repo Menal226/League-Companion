@@ -12,13 +12,16 @@ connector_loop: asyncio.AbstractEventLoop | None = None
 event_queue: asyncio.Queue = asyncio.Queue()
 main_loop: asyncio.AbstractEventLoop | None = None
 
+
 def set_main_loop(loop: asyncio.AbstractEventLoop):
     global main_loop
     main_loop = loop
 
+
 def push(html: str):
     if main_loop and len(html) > 0:
         main_loop.call_soon_threadsafe(event_queue.put_nowait, html)
+
 
 async def request(method: str, path: str, **kwargs) -> ClientResponse:
     if connection is None or connector_loop is None:
@@ -30,10 +33,12 @@ async def request(method: str, path: str, **kwargs) -> ClientResponse:
 
     return await asyncio.get_event_loop().run_in_executor(None, future.result)
 
+
 def start():
     # prevent circular import
     from champ_select import lcu as lcu_cs
     from lobby import lcu as lcu_l
+
     lcu_cs.register(connector)
     lcu_l.register(connector)
     # force existing pages to reset

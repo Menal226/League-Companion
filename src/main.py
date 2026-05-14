@@ -7,11 +7,13 @@ from lobby.api import register as register_l
 from default.api import register as register_def
 from champ_select.api import register as register_cs
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     lcu.set_main_loop(asyncio.get_running_loop())
     lcu.start()
     yield
+
 
 def create_app() -> FastAPI:
     api = FastAPI()
@@ -19,6 +21,7 @@ def create_app() -> FastAPI:
     register_def(api)
     register_l(api)
     return api
+
 
 app = create_app()
 app.router.lifespan_context = lifespan
