@@ -31,7 +31,7 @@ def register(connector: Connector):
     @connector.ws.register("/lol-gameflow/v1/session", event_types=("CREATE", "UPDATE"))
     async def on_lobby_change(conn: Connection, event: WebsocketEventResponse):
         push(
-            f'<img id="lobby-bg" hx-swap-oob="true" src="{await extract_background(conn, event)}">'
+            f'<img id="lobby-bg" hx-swap-oob="true" style="display: block;" src="{await extract_background(conn, event)}">'
         )
 
 

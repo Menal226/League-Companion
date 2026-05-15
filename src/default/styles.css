@@ -5,7 +5,6 @@ html, body {
 
 .bench-champ-icon {
     height: 5vw;
-    pointer-events: none;
     user-select: none;
 }
 
@@ -29,22 +28,24 @@ html, body {
 
 .aram-portrait {
     width: 10vw;
-    pointer-events: none;
   user-select: none;
 }
 
 #special-screen {
   display: flex;
+  user-select: none;
   justify-content: space-around;
 }
 
 #select-screen {
     display: flex;
+  user-select: none;
     justify-content: space-around;
 }
 
 #aram-bench {
     display: flex;
+  user-select: none;
     justify-content: center;
 }
 
