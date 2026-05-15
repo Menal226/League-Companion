@@ -1,4 +1,6 @@
 import lcu
+from math import floor
+from datetime import datetime
 from fastapi import FastAPI
 
 
@@ -30,3 +32,16 @@ def register(app: FastAPI):
                 "completed": True,
             },
         )
+
+    @app.get("/champ-select/clock")
+    async def get_remaining_time():
+        resp = await lcu.request("GET", "/lol-champ-select/v1/session/timer")
+
+        if resp.status != 200:
+            return ""
+
+        data = await resp.json()
+        timer_ms = data.get("adjustedTimeLeftInPhase", 0) - (
+            datetime.now().timestamp() * 1000 - (data.get("internalNowInEpochMs", 0))
+        )
+        return max(0, floor(timer_ms / 1000))

@@ -1,33 +1,33 @@
 html, body { 
-    height: 100%; 
-    margin: 0; 
+  height: 100%; 
+  margin: 0; 
 }
 
 .bench-champ-icon {
-    height: 5vw;
-    user-select: none;
+  height: 5vw;
+  user-select: none;
 }
 
 .player-lobby-info {
-    display: flex;
-    align-items: center;
-    gap: 1vw;
+  display: flex;
+  align-items: center;
+  gap: 1vw;
 }
 
 .player-champ-icon {
-    height: 7vw;
-    pointer-events: none;
-    user-select: none;
+  height: 7vw;
+  pointer-events: none;
+  user-select: none;
 }
 
 .player-summoner {
-    height: 2vw;
-    pointer-events: none;
-    user-select: none;
+  height: 2vw;
+  pointer-events: none;
+  user-select: none;
 }
 
 .aram-portrait {
-    width: 10vw;
+  width: 10vw;
   user-select: none;
 }
 
@@ -38,15 +38,15 @@ html, body {
 }
 
 #select-screen {
-    display: flex;
+  display: flex;
   user-select: none;
-    justify-content: space-around;
+  justify-content: space-around;
 }
 
 #aram-bench {
-    display: flex;
+  display: flex;
   user-select: none;
-    justify-content: center;
+  justify-content: center;
 }
 
 #holder {
