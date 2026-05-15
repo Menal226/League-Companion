@@ -1,6 +1,7 @@
 import base64
 from opgg import OPGG
 from lcu_driver.connection import Connection
+from services.summoner_service import get_current_id
 
 opgg = OPGG()
 
@@ -11,6 +12,8 @@ async def get_icon(conn: Connection, champion_id: int) -> str:
     resp = await conn.request(
         "get", f"/lol-game-data/assets/v1/champion-icons/{champion_id}.png"
     )
+    if resp.status != 200:
+        return ""
     data = await resp.read()
     encoded = base64.b64encode(data).decode("ascii")
     return f"data:image/png;base64,{encoded}"
@@ -42,10 +45,21 @@ async def get_counter_ids(champion_id: int) -> list[int]:
 
 async def get_portrait(conn: Connection, champion_id: int) -> str:
     if champion_id <= 0:
-        champion_id = -1
-    resp = await conn.request(
-        "get", f"/lol-game-data/assets/v1/champion-tiles/{champion_id}.png"
+        return ""
+    summ_id = await get_current_id(conn)
+
+    champ_info_resp = await conn.request(
+        "get", f"/lol-champions/v1/inventories/{summ_id}/champions/{champion_id}"
     )
+
+    champ_info = await champ_info_resp.json()
+
+    resp = await conn.request(
+        "get",
+        champ_info.get("baseLoadScreenPath", ""),
+    )
+    if resp.status != 200:
+        return ""
     data = await resp.read()
     encoded = base64.b64encode(data).decode("ascii")
     return f"data:image/png;base64,{encoded}"

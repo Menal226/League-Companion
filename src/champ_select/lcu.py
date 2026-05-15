@@ -13,6 +13,9 @@ bench = [0 for _ in range(10)]
 # autofill, side
 # /lol-champ-select/v1/pin-drop-notification
 
+# skins info
+# /lol-champions/v1/inventories/{summonerid}/champions
+
 
 def register(connector: Connector):
     @connector.ws.register("/lol-champ-select/v1/session", event_types=("CREATE",))
@@ -44,11 +47,17 @@ def register(connector: Connector):
             f'<div id="aram-picks" hx-swap-oob="true" style="display: block;">{await create_possible_pick_images(conn, event)}</div>'
         )
 
+    @connector.ws.register(
+        "/lol-champ-select/v1/current-champion", event_types=("CREATE",)
+    )
+    async def on_champ_selected(conn: Connection, event: WebsocketEventResponse):
+        push('<div id="aram-picks" hx-swap-oob="true" style="display: none;"></div>')
+
 
 async def create_possible_pick_images(conn: Connection, event: WebsocketEventResponse):
     return "".join(
         [
-            f'<img id="aram-possible-{i}" src="{await champion_service.get_icon(conn, event.data[i])}" hx-trigger="click" hx-post="/champ-select/pick/{event.data[i]}">'
+            f'<img id="aram-possible-{i}" src="{await champion_service.get_portrait(conn, event.data[i])}" hx-trigger="click" hx-post="/champ-select/pick/{event.data[i]}">'
             for i in range(3)
         ]
     )

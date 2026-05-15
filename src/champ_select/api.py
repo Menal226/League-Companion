@@ -30,7 +30,3 @@ def register(app: FastAPI):
                 "completed": True,
             },
         )
-
-        lcu.push(
-            '<div id="aram-picks" hx-swap-oob="true" style="display: none;"></div>'
-        )
