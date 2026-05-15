@@ -1,0 +1,92 @@
+html, body { 
+    height: 100%; 
+    margin: 0; 
+}
+
+.bench-champ-icon {
+    height: 5vw;
+    pointer-events: none;
+    user-select: none;
+}
+
+.player-lobby-info {
+    display: flex;
+    align-items: center;
+    gap: 1vw;
+}
+
+.player-champ-icon {
+    height: 7vw;
+    pointer-events: none;
+    user-select: none;
+}
+
+.player-summoner {
+    height: 2vw;
+    pointer-events: none;
+    user-select: none;
+}
+
+.aram-portrait {
+    width: 10vw;
+    pointer-events: none;
+  user-select: none;
+}
+
+#special-screen {
+  display: flex;
+  justify-content: space-around;
+}
+
+#select-screen {
+    display: flex;
+    justify-content: space-around;
+}
+
+#aram-bench {
+    display: flex;
+    justify-content: center;
+}
+
+#holder {
+  position: relative;
+  height: 100%;
+  gap: 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+}
+
+#instant-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+#queue-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+#container {
+  height: 100vh;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+#lobby-bg {
+  position: absolute;
+  inset: 0;
+  width: 125%;
+  height: 100%;
+  object-fit: cover;
+  object-position: right;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+}

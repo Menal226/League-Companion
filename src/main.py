@@ -2,6 +2,7 @@ import lcu
 import uvicorn
 import asyncio
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from lobby.api import register as register_l
 from default.api import register as register_def
@@ -17,6 +18,7 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     api = FastAPI()
+    api.mount("/static", StaticFiles(directory="src/default"), name="static")
     register_cs(api)
     register_def(api)
     register_l(api)

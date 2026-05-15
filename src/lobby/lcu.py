@@ -1,3 +1,4 @@
+import base64
 from lcu import push
 from pathlib import Path
 from lcu_driver import Connector
@@ -26,6 +27,24 @@ def register(connector: Connector):
             return
 
         await conn.request("POST", "/lol-matchmaking/v1/ready-check/accept")
+
+    @connector.ws.register("/lol-gameflow/v1/session", event_types=("CREATE", "UPDATE"))
+    async def on_lobby_change(conn: Connection, event: WebsocketEventResponse):
+        push(
+            f'<img id="lobby-bg" hx-swap-oob="true" src="{await extract_background(conn, event)}">'
+        )
+
+
+async def extract_background(conn: Connection, event: WebsocketEventResponse) -> str:
+    bg_url = event.data.get("map", {}).get("assets", {}).get("gameflow-background", "")
+    if bg_url == "":
+        return ""
+    resp = await conn.request("GET", f"/{bg_url}")
+    if resp.status != 200:
+        return ""
+    data = await resp.read()
+    encoded = base64.b64encode(data).decode("ascii")
+    return f"data:image/png;base64,{encoded}"
 
 
 def toggle_autoaccept():
