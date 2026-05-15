@@ -58,7 +58,7 @@ async def create_possible_pick_images(conn: Connection, event: WebsocketEventRes
     return "".join(
         [
             f'<img id="aram-possible-{i}" src="{await champion_service.get_portrait(conn, event.data[i])}" hx-trigger="click" hx-post="/champ-select/pick/{event.data[i]}">'
-            for i in range(3)
+            for i in range(len(event.data))
         ]
     )
 
