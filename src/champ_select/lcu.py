@@ -1,8 +1,10 @@
+from shutil import ExecError
+
 from lcu import push
 from pathlib import Path
 from lcu_driver import Connector
 from lcu_driver.connection import Connection
-from services import champion_service, spells_service
+from services import champion_service, lobby_service
 from lcu_driver.events.responses import WebsocketEventResponse
 from lobby.lcu import switch_screen as switch_to_lobby
 
@@ -16,6 +18,30 @@ bench = [0 for _ in range(10)]
 # skins info
 # /lol-champions/v1/inventories/{summonerid}/champions
 
+"""
+[
+  {
+    "cellId": 1,
+    "id": 32,
+    "state": "INVALID"
+  },
+  {
+    "cellId": 2,
+    "id": 34,
+    "state": "INVALID"
+  },
+  {
+    "cellId": 3,
+    "id": 28,
+    "state": "INVALID"
+  },
+  {
+    "cellId": 4,
+    "id": 30,
+    "state": "INVALID"
+  }
+]"""
+
 
 def register(connector: Connector):
     @connector.ws.register("/lol-champ-select/v1/session", event_types=("CREATE",))
@@ -25,9 +51,12 @@ def register(connector: Connector):
 
     @connector.ws.register("/lol-champ-select/v1/session", event_types=("UPDATE",))
     async def on_champ_select_update(conn: Connection, event: WebsocketEventResponse):
-        await update_aram_bench(conn, event)
-        await update_teams(conn, event)
-        await update_bans(conn, event)
+        try:
+            await update_aram_bench(conn, event)
+            await update_teams(conn, event)
+            await update_bans(conn, event)
+        except Exception as e:
+            print(e)
 
     @connector.ws.register("/lol-champ-select/v1/session", event_types=("DELETE",))
     async def on_champ_select_delete(conn: Connection, event: WebsocketEventResponse):
@@ -57,7 +86,7 @@ def register(connector: Connector):
 async def create_possible_pick_images(conn: Connection, event: WebsocketEventResponse):
     return "".join(
         [
-            f'<img id="aram-possible-{i}" src="{await champion_service.get_portrait(conn, event.data[i])}" hx-trigger="click" hx-post="/champ-select/pick/{event.data[i]}">'
+            f'<img id="aram-possible-{i}" class="aram-portrait" src="{await champion_service.get_portrait(conn, event.data[i])}" hx-trigger="click" hx-post="/champ-select/pick/{event.data[i]}">'
             for i in range(len(event.data))
         ]
     )
@@ -76,14 +105,69 @@ async def create_my_team_player(conn: Connection, player_info, index: int) -> st
         == (last_state.get("championId") or last_state.get("championPickIntent"))
         and player_info["spell1Id"] == last_state.get("spell1Id")
         and player_info["spell2Id"] == last_state.get("spell2Id")
+        and player_info["cellId"] == last_state.get("cellId")
+        and player_info["assignedPosition"] == last_state.get("assignedPosition")
     ):
         return ""
 
     players[player_info["cellId"]] = player_info
-    spell1 = spells_service.get_icon(player_info["spell1Id"])
-    spell2 = spells_service.get_icon(player_info["spell2Id"])
+    spell1 = lobby_service.get_spell_icon(player_info["spell1Id"])
+    spell2 = lobby_service.get_spell_icon(player_info["spell2Id"])
     champ_icon = await champion_service.get_icon(conn, champ_id)
-    return f'<div class="player-lobby-info" hx-swap-oob="true" id="my-player-{index}"><img src="{champ_icon}" class="player-champ-icon"><div><b style="font-size: 1rem;">{player_info.get("gameName", "Hidden")}</b><div><img src="{spell1}" class="player-summoner"><img src="{spell2}" class="player-summoner"></div></div></div>'
+    name = player_info["gameName"] if player_info["gameName"] != "" else "Unknown"
+    swaps = await get_allowed_swaps(conn)
+    print()
+
+    return (
+        f'<div class="player-lobby-info" hx-swap-oob="true" id="my-player-{index}">'
+        '<div class="swap-holder">'
+        '<b style="font-size: 1.5rem;">Swap with player</b>'
+        "<div>"
+        f"{make_position_swap_button(player_info["assignedPosition"], swaps[0][player_info["cellId"]])}"
+        f"{make_champion_swap_button(player_info["assignedPosition"], swaps[1][player_info["cellId"]])}"
+        f"{make_order_swap_button(player_info["assignedPosition"], swaps[2][player_info["cellId"]])}"
+        "</div>"
+        "</div>"
+        f'<img src="{champ_icon}" class="player-champ-icon">'
+        "<div>"
+        f'<b style="font-size: 1rem;">{name}</b>'
+        "<div>"
+        f'<img src="{spell1}" class="player-summoner">'
+        f'<img src="{spell2}" class="player-summoner">'
+        "</div>"
+        "</div>"
+        "</div>"
+    )
+
+
+def make_position_swap_button(position: str, id: 0):
+    if id == 0:
+        return f'<img src="{lobby_service.get_position_icon_path(position, True)}" class="swap-icon" title="Swap Positions (Disabled)">'
+    else:
+        return (
+            f'<img src="{lobby_service.get_position_icon_path(position)}" class="swap-icon" title="Swap Positions" style="cursor: pointer;" '
+            f'hx-trigger="click" hx-post="/champ-select/swap-position/{id}/request" hx-swap="none">'
+        )
+
+
+def make_champion_swap_button(position: str, id: 0):
+    if id == 0:
+        return '<img src="/assets/icon-helmet-disabled.png" class="swap-icon" title="Swap Champions (Disabled)">'
+    else:
+        return (
+            f'<img src="/assets/icon-helmet.png" class="swap-icon" title="Swap Champions" style="cursor: pointer;" '
+            f'hx-trigger="click" hx-post="/champ-select/swap-champions/{id}/request" hx-swap="none">'
+        )
+
+
+def make_order_swap_button(position: str, id: 0):
+    if id == 0:
+        return '<img src="/assets/icon-swap-disabled.png" class="swap-icon" title="Swap Pick Order (Disabled)">'
+    else:
+        return (
+            f'<img src="/assets/icon-swap.png" class="swap-icon" title="Swap Pick Order" style="cursor: pointer;" '
+            f'hx-trigger="click" hx-post="/champ-select/swap-order/{id}/request" hx-swap="none">'
+        )
 
 
 async def create_their_team_player(conn: Connection, player_info, index: int) -> str:
@@ -107,7 +191,35 @@ async def create_their_team_player(conn: Connection, player_info, index: int) ->
             for c_id in counter_ids
         ]
     )
-    return f'<div class="player-lobby-info" hx-swap-oob="true" id="their-player-{index}"><div><b style="font-size: 1rem;">Counters</b><div>{counters}</div></div><img src="{champ_icon}" class="player-champ-icon"></div>'
+    return (
+        f'<div class="player-lobby-info" hx-swap-oob="true" id="their-player-{index}">'
+        "<div>"
+        '<b style="font-size: 1rem;">Counters</b>'
+        f"<div>{counters}</div>"
+        "</div>"
+        f'<img src="{champ_icon}" class="player-champ-icon">'
+        "</div>"
+    )
+
+
+async def get_allowed_swaps(conn: Connection) -> list[dict[int, bool]]:
+    result = [{i: 0 for i in range(10)} for _ in range(3)]
+    endpoints = [
+        "/lol-champ-select/v1/session/position-swaps",
+        "/lol-champ-select/v1/session/champion-swaps",
+        "/lol-champ-select/v1/session/pick-order-swaps",
+    ]
+
+    for i, endpoint in enumerate(endpoints):
+        resp = await conn.request("GET", endpoint)
+        if resp.status == 200:
+            data = await resp.json()
+            for point in data:
+                result[i][point["cellId"]] = (
+                    point["id"] if point["state"] == "AVAILABLE" else 0
+                )
+
+    return result
 
 
 async def update_teams(conn: Connection, event: WebsocketEventResponse):
@@ -173,7 +285,10 @@ async def update_aram_bench(conn: Connection, event: WebsocketEventResponse):
     for i, champ in enumerate(event.data["benchChampions"]):
         if bench[i] != champ["championId"]:
             bench[i] = champ["championId"]
-            result += f'<img src="{await champion_service.get_icon(conn, champ["championId"])}" hx-trigger="click" hx-post="/champ-select/bench/swap/{champ["championId"]}" hx-swap-oob="true" hx-swap="none" class="bench-champ-icon" id="bench-{i}">'
+            result += (
+                f'<img src="{await champion_service.get_icon(conn, champ["championId"])}" class="bench-champ-icon" id="bench-{i}"'
+                f'hx-trigger="click" hx-post="/champ-select/bench/swap/{champ["championId"]}" hx-swap-oob="true" hx-swap="none">'
+            )
     push(result)
 
 

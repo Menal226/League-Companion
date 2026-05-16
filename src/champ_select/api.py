@@ -45,3 +45,21 @@ def register(app: FastAPI):
             datetime.now().timestamp() * 1000 - (data.get("internalNowInEpochMs", 0))
         )
         return max(0, floor(timer_ms / 1000))
+
+    @app.post("/champ-select/swap-position/{id}/request")
+    async def swap_position(id: int):
+        await lcu.request(
+            "POST", f"/lol-champ-select/v1/session/position-swaps/{id}/request"
+        )
+
+    @app.post("/champ-select/swap-champions/{id}/request")
+    async def swap_position(id: int):
+        await lcu.request(
+            "POST", f"/lol-champ-select/v1/session/champion-swaps/{id}/request"
+        )
+
+    @app.post("/champ-select/swap-order/{id}/request")
+    async def swap_position(id: int):
+        await lcu.request(
+            "POST", f"/lol-champ-select/v1/session/pick-order-swaps/{id}/request"
+        )

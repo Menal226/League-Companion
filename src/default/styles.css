@@ -6,6 +6,7 @@ html, body {
 .bench-champ-icon {
   height: 5vw;
   user-select: none;
+  cursor: pointer;
 }
 
 .player-lobby-info {
@@ -28,6 +29,24 @@ html, body {
 
 .aram-portrait {
   width: 10vw;
+  user-select: none;
+  cursor: pointer;
+}
+
+.player-holder {
+  display: flex;
+  align-items: center;
+  gap: 1vw;
+}
+
+.swap-holder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.swap-icon {
+  width: 4vw;
   user-select: none;
 }
 
@@ -90,4 +109,5 @@ html, body {
   z-index: 0;
   pointer-events: none;
   user-select: none;
+  display: none;
 }

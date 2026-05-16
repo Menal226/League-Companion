@@ -1,7 +1,7 @@
 # /lol-game-data/assets/DATA/Spells/Icons2D/
 
 CD_ADDR = "https://raw.communitydragon.org/latest/game/data/spells/icons2d/"
-names = {
+spell_names = {
     21: "summonerbarrier.png",
     1: "summoner_boost.png",
     14: "summonerignite.png",
@@ -16,5 +16,13 @@ names = {
 }
 
 
-def get_icon(spell_id: int):
-    return CD_ADDR + names.get(spell_id, "terrify.png")
+def get_spell_icon(spell_id: int):
+    return CD_ADDR + spell_names.get(spell_id, "terrify.png")
+
+
+def get_position_icon_path(position_name: str, disabled: bool = False):
+    if position_name == "":
+        position_name = "none"
+    return (
+        f"/assets/positions/icon-{position_name}{"-disabled" if disabled else ""}.png"
+    )

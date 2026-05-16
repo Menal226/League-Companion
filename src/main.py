@@ -19,6 +19,7 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     api = FastAPI()
     api.mount("/static", StaticFiles(directory="src/default"), name="static")
+    api.mount("/assets", StaticFiles(directory="src/assets"), name="assets")
     register_cs(api)
     register_def(api)
     register_l(api)
