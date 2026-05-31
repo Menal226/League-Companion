@@ -82,6 +82,18 @@ def register(connector: Connector):
     async def on_champ_selected(conn: Connection, event: WebsocketEventResponse):
         push('<div id="aram-picks" hx-swap-oob="true" style="display: none;"></div>')
 
+    @connector.ws.register(
+        "/lol-champ-select/v1/skin-selector-info", event_types=("CREATE", "UPDATE")
+    )
+    async def on_skin_change(conn: Connection, event: WebsocketEventResponse):
+        print("test")
+        try:
+            push(
+                f'<img id="skin-bg" hx-swap-oob="true" style="display: block;" src="{await champion_service.get_skin_splash(conn, event.data["selectedChampionId"], event.data["selectedSkinId"])}">'
+            )
+        except Exception as e:
+            print(e)
+
 
 async def create_possible_pick_images(conn: Connection, event: WebsocketEventResponse):
     return "".join(

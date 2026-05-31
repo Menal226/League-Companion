@@ -63,3 +63,20 @@ async def get_portrait(conn: Connection, champion_id: int) -> str:
     data = await resp.read()
     encoded = base64.b64encode(data).decode("ascii")
     return f"data:image/png;base64,{encoded}"
+
+
+async def get_skin_splash(conn: Connection, champ_id: int, skin_id: int) -> str:
+    summ_id = await get_current_id(conn)
+    skin_info_resp = await conn.request(
+        "get",
+        f"/lol-champions/v1/inventories/{summ_id}/champions/{champ_id}/skins/{skin_id}",
+    )
+    skin_info = await skin_info_resp.json()
+
+    resp = await conn.request("get", skin_info.get("splashPath", ""))
+    if resp.status != 200:
+        return ""
+
+    data = await resp.read()
+    encoded = base64.b64encode(data).decode("ascii")
+    return f"data:image/png;base64,{encoded}"

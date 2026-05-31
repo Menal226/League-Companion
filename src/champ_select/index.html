@@ -1,4 +1,5 @@
 <div id="container" hx-swap-oob="true">
+  <img id="skin-bg" style="display: none;">
   <div id="special-screen">
     <div id="my-team-bans" style="display: none;">
       <img class="bench-champ-icon" id="my-ban-0">
@@ -27,7 +28,7 @@
       <img class="bench-champ-icon" id="their-ban-4">
     </div>
   </div>
-  <b id="clock" hx-get="/champ-select/clock" hx-trigger="every 1s" hx-swap="innerHTML" style="display:block; text-align:center; font-size: 3rem;"></b>
+  <b id="clock" hx-get="/champ-select/clock" hx-trigger="every 1s" hx-swap="innerHTML"></b>
   <div id="select-screen">
     <div id="my-team">
       <div class="player-lobby-info" id="my-player-0">
