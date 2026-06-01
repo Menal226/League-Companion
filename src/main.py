@@ -4,6 +4,9 @@ import asyncio
 import threading
 import time
 import webview
+import logging
+from pathlib import Path
+from logging.handlers import RotatingFileHandler
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
@@ -30,13 +33,43 @@ def create_app() -> FastAPI:
 
 
 def start_server():
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000, log_config=None)
 
 
-app = create_app()
-app.router.lifespan_context = lifespan
+def setup_logging() -> None:
+    logs_dir = Path("logging")
+    logs_dir.mkdir(parents=True, exist_ok=True)
+
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    root.handlers.clear()
+
+    formatter = logging.Formatter(
+        fmt="[%(asctime)s] - %(levelname)-8s: %(name)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    console.setFormatter(formatter)
+
+    file_handler = RotatingFileHandler(
+        logs_dir / "companion.log",
+        encoding="utf-8",
+    )
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(formatter)
+
+    root.addHandler(console)
+    root.addHandler(file_handler)
+
 
 if __name__ == "__main__":
+    setup_logging()
+    logger = logging.getLogger(__name__)
+    logger.info("Starting Companion...")
+    app = create_app()
+    app.router.lifespan_context = lifespan
     server_thread = threading.Thread(target=start_server, daemon=True)
     server_thread.start()
 
@@ -44,4 +77,5 @@ if __name__ == "__main__":
     window = webview.create_window(
         title="League Companion", url="http://127.0.0.1:8000", width=1280, height=800
     )
+    logger.info("Companion Started!")
     webview.start()

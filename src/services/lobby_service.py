@@ -1,5 +1,7 @@
 # /lol-game-data/assets/DATA/Spells/Icons2D/
 
+import logging
+
 CD_ADDR = "https://raw.communitydragon.org/latest/game/data/spells/icons2d/"
 spell_names = {
     21: "summonerbarrier.png",
@@ -15,13 +17,20 @@ spell_names = {
     12: "summoner_teleport_new.png",
 }
 
+logger = logging.getLogger(__name__)
+
 
 def get_spell_icon(spell_id: int):
-    return CD_ADDR + spell_names.get(spell_id, "terrify.png")
+    spell_path = spell_names.get(spell_id, "terrify.png")
+    if spell_path == "terrify.png":
+        logger.warning(f"Invalid spell id {spell_id}")
+
+    return CD_ADDR + spell_path
 
 
 def get_position_icon_path(position_name: str, disabled: bool = False):
     if position_name == "":
+        logger.warning(f"Invalid position {position_name}")
         position_name = "none"
     return (
         f"/assets/positions/icon-{position_name}{"-disabled" if disabled else ""}.png"

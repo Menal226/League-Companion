@@ -1,5 +1,6 @@
 import asyncio
 import threading
+import logging
 from pathlib import Path
 from lcu_driver import Connector
 from aiohttp import ClientResponse
@@ -11,6 +12,7 @@ connector_loop: asyncio.AbstractEventLoop | None = None
 
 event_queue: asyncio.Queue = asyncio.Queue()
 main_loop: asyncio.AbstractEventLoop | None = None
+logger = logging.getLogger(__name__)
 
 
 def set_main_loop(loop: asyncio.AbstractEventLoop):
@@ -52,6 +54,7 @@ async def on_connect(conn: Connection):
     global connection, connector_loop
     connection = conn
     connector_loop = asyncio.get_event_loop()
+    logger.info("Lcu driver started")
 
 
 @connector.close
@@ -59,3 +62,4 @@ async def on_disconnect(_):
     global connection, connector_loop
     connection = None
     connector_loop = None
+    logger.info("Lcu driver closed")
