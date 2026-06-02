@@ -82,7 +82,7 @@ async def get_portrait(conn: Connection, champion_id: int) -> str:
 
         if champ_info_resp.status != 200:
             logger.warning(
-                f"Responce status code {resp.status} when getting info about chamption {champion_id}"
+                f"Responce status code {champ_info_resp.status} when getting info about champion {champion_id}"
             )
             return ""
 
@@ -107,20 +107,9 @@ async def get_portrait(conn: Connection, champion_id: int) -> str:
 async def get_skin_splash(conn: Connection, champ_id: int, skin_id: int) -> str:
     try:
         summ_id = await get_current_id(conn)
-        skin_info_resp = await conn.request(
-            "get",
-            f"/lol-champions/v1/inventories/{summ_id}/champions/{champ_id}/skins/{skin_id}",
+        resp = await conn.request(
+            "get", await get_skin_splash_path(conn, summ_id, champ_id, skin_id, True)
         )
-
-        if skin_info_resp.status != 200:
-            logger.warning(
-                f"Responce status code {skin_info_resp.status} when getting skin info for {champ_id} and {skin_id}"
-            )
-            return ""
-
-        skin_info = await skin_info_resp.json()
-
-        resp = await conn.request("get", skin_info.get("splashPath", ""))
         if resp.status != 200:
             logger.warning(
                 f"Responce status code {resp.status} when getting splash art for {champ_id} and {skin_id}"
@@ -134,3 +123,61 @@ async def get_skin_splash(conn: Connection, champ_id: int, skin_id: int) -> str:
         logger.exception(
             f"Exception when getting splash art for {champ_id} and {skin_id}"
         )
+        return ""
+
+
+async def find_parent_of_selected_skin(conn: Connection, skin_id: int) -> int:
+    try:
+        all_skins_resp = await conn.request(
+            "get", "/lol-champ-select/v1/skin-carousel-skins"
+        )
+        if all_skins_resp.status != 200:
+            logger.warning(
+                f"Responce status code {all_skins_resp.status} when finding parent skin for {skin_id}"
+            )
+            return skin_id
+
+        all_skins = await all_skins_resp.json()
+        for skin in all_skins:
+            for child in skin.get("childSkins", []):
+                if child["id"] == skin_id:
+                    return child["parentSkinId"]
+
+        return skin_id
+    except Exception:
+        logger.exception(f"Exception when finding parent skin for {skin_id}")
+        return skin_id
+
+
+async def get_skin_splash_path(
+    conn: Connection,
+    summ_id: int,
+    champ_id: int,
+    skin_id: int,
+    is_recusive: bool = False,
+) -> str:
+    try:
+        skin_info_resp = await conn.request(
+            "get",
+            f"/lol-champions/v1/inventories/{summ_id}/champions/{champ_id}/skins/{skin_id}",
+        )
+
+        if skin_info_resp.status != 200 and skin_info_resp.status != 404:
+            logger.warning(
+                f"Responce status code {skin_info_resp.status} when getting skin info for {champ_id} and {skin_id}"
+            )
+            return ""
+
+        if skin_info_resp.status == 404:
+            if is_recusive:
+                parent_id = await find_parent_of_selected_skin(conn, skin_id)
+                return await get_skin_splash_path(conn, summ_id, champ_id, parent_id)
+            return ""
+
+        skin_info = await skin_info_resp.json()
+        return skin_info.get("splashPath", "")
+    except Exception:
+        logger.exception(
+            f"Exception when getting splash art path for {champ_id} and {skin_id}"
+        )
+        return ""
