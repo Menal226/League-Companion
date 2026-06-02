@@ -26,6 +26,7 @@ async def get_icon(conn: Connection, champion_id: int) -> str:
         return f"data:image/png;base64,{encoded}"
     except Exception:
         logger.exception(f"Exception when getting champion {champion_id} icon")
+        return ""
 
 
 async def get_name(conn: Connection, champion_id: int) -> str:
@@ -49,6 +50,7 @@ async def get_name(conn: Connection, champion_id: int) -> str:
         return possible_name
     except Exception:
         logger.exception(f"Exception when getting champion {champion_id} name")
+        return ""
 
 
 async def get_counter_ids(champion_id: int) -> list[int]:
@@ -67,6 +69,7 @@ async def get_counter_ids(champion_id: int) -> list[int]:
         return []
     except Exception:
         logger.exception(f"Exception when getting counters for {champion_id}")
+        return []
 
 
 async def get_portrait(conn: Connection, champion_id: int) -> str:
@@ -102,6 +105,7 @@ async def get_portrait(conn: Connection, champion_id: int) -> str:
         return f"data:image/png;base64,{encoded}"
     except Exception:
         logger.exception(f"Exception when getting portrait for {champion_id}")
+        return ""
 
 
 async def get_skin_splash(conn: Connection, champ_id: int, skin_id: int) -> str:

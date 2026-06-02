@@ -19,3 +19,4 @@ async def get_current_id(conn: Connection) -> int:
         return possible
     except Exception:
         logger.exception("Exception when getting summoner id")
+        return 0

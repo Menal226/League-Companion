@@ -183,6 +183,7 @@ async def create_my_team_player(conn: Connection, player_info, index: int) -> st
         )
     except Exception:
         logger.exception("Exception when creating ally team")
+        return ""
 
 
 def make_position_swap_button(position: str, id: 0):
@@ -248,6 +249,7 @@ async def create_their_team_player(conn: Connection, player_info, index: int) ->
         )
     except Exception:
         logger.exception("Excepting when creating enemy team")
+        return ""
 
 
 async def get_allowed_swaps(conn: Connection) -> list[dict[int, bool]]:
@@ -275,6 +277,7 @@ async def get_allowed_swaps(conn: Connection) -> list[dict[int, bool]]:
         return result
     except Exception:
         logger.exception("Exception when getting allowed swaps")
+        return ""
 
 
 async def update_teams(conn: Connection, event: WebsocketEventResponse):

@@ -61,6 +61,7 @@ async def extract_background(conn: Connection, event: WebsocketEventResponse) ->
         return f"data:image/png;base64,{encoded}"
     except Exception:
         logger.exception("Exception getting lobby background")
+        return ""
 
 
 def toggle_autoaccept():
