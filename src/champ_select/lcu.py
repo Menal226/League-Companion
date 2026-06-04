@@ -5,7 +5,6 @@ from lcu_driver import Connector
 from lcu_driver.connection import Connection
 from services import champion_service, lobby_service
 from lcu_driver.events.responses import WebsocketEventResponse
-from lobby.lcu import switch_screen as switch_to_lobby
 
 in_game = False
 players = [{} for _ in range(10)]
@@ -44,16 +43,9 @@ logger = logging.getLogger(__name__)
 
 
 def register(connector: Connector):
-    @connector.ws.register("/lol-champ-select/v1/session", event_types=("CREATE",))
-    async def on_champ_select_create(conn: Connection, event: WebsocketEventResponse):
-        try:
-            logger.info("CREATE /lol-champ-select/v1/session")
-            switch_screen()
-            await on_champ_select_update(conn, event)
-        except Exception:
-            logger.exception("Exception on CREATE /lol-champ-select/v1/session")
-
-    @connector.ws.register("/lol-champ-select/v1/session", event_types=("UPDATE",))
+    @connector.ws.register(
+        "/lol-champ-select/v1/session", event_types=("CREATE", "UPDATE")
+    )
     async def on_champ_select_update(conn: Connection, event: WebsocketEventResponse):
         try:
             logger.info("UPDATE /lol-champ-select/v1/session")
@@ -72,7 +64,6 @@ def register(connector: Connector):
             global players, bench
             players = [{} for _ in range(10)]
             bench = [0 for _ in range(10)]
-            switch_to_lobby()
         except Exception:
             logger.exception("Exception on DELETE /lol-champ-select/v1/session")
 

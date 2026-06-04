@@ -5,6 +5,7 @@ from pathlib import Path
 from lcu_driver import Connector
 from aiohttp import ClientResponse
 from lcu_driver.connection import Connection
+from lcu_driver.events.responses import WebsocketEventResponse
 
 connector = Connector()
 connection: Connection | None = None
@@ -13,6 +14,8 @@ connector_loop: asyncio.AbstractEventLoop | None = None
 event_queue: asyncio.Queue = asyncio.Queue()
 main_loop: asyncio.AbstractEventLoop | None = None
 logger = logging.getLogger(__name__)
+
+current_state = ""
 
 
 def set_main_loop(loop: asyncio.AbstractEventLoop):
@@ -63,3 +66,32 @@ async def on_disconnect(_):
     connection = None
     connector_loop = None
     logger.info("Lcu driver closed")
+
+
+@connector.ws.register("/lol-gameflow/v1/session", event_types=("CREATE", "UPDATE"))
+async def screen_update(conn: Connection, event: WebsocketEventResponse):
+    from champ_select import lcu as lcu_cs
+    from lobby import lcu as lcu_l
+    from in_game import lcu as lcu_ig
+    from post_game import lcu as lcu_pg
+
+    logger.info("CREATE/UPDATE /lol-gameflow/v1/session")
+    global current_state
+    state = event.data.get("phase", "")
+
+    if state == "ChampSelect":
+        if current_state != state:
+            lcu_cs.switch_screen()
+    elif state == "Lobby":
+        if current_state != state:
+            lcu_l.switch_screen()
+        await lcu_l.update_background(conn, event)
+    elif state == "InProgress":
+        if current_state != state:
+            lcu_ig.switch_screen()
+    elif state == "EndOfGame":
+        if current_state != state:
+            lcu_pg.switch_screen()
+    else:
+        return
+    current_state = state

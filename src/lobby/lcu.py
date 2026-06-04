@@ -33,13 +33,6 @@ def register(connector: Connector):
         logger.info("UPDATE /lol-matchmaking/v1/ready-check")
         await conn.request("POST", "/lol-matchmaking/v1/ready-check/accept")
 
-    @connector.ws.register("/lol-gameflow/v1/session", event_types=("CREATE", "UPDATE"))
-    async def on_lobby_change(conn: Connection, event: WebsocketEventResponse):
-        logger.info("CREATE/UPDATE /lol-gameflow/v1/session")
-        push(
-            f'<img id="lobby-bg" hx-swap-oob="true" style="display: block;" src="{await extract_background(conn, event)}">'
-        )
-
 
 async def extract_background(conn: Connection, event: WebsocketEventResponse) -> str:
     try:
@@ -62,6 +55,12 @@ async def extract_background(conn: Connection, event: WebsocketEventResponse) ->
     except Exception:
         logger.exception("Exception getting lobby background")
         return ""
+
+
+async def update_background(conn: Connection, event: WebsocketEventResponse):
+    push(
+        f'<img id="lobby-bg" hx-swap-oob="true" style="display: block;" src="{await extract_background(conn, event)}">'
+    )
 
 
 def toggle_autoaccept():
