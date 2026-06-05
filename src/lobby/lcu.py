@@ -7,6 +7,8 @@ from lcu_driver.connection import Connection
 from lcu_driver.events.responses import WebsocketEventResponse
 
 auto_accept = False
+auto_skip_honor = False
+auto_honor_lobby = False
 logger = logging.getLogger(__name__)
 
 
@@ -69,10 +71,32 @@ def toggle_autoaccept():
     logger.info(f"Autoaccept set to {auto_accept}")
 
 
+def toggle_honor_skip():
+    global auto_skip_honor
+    auto_skip_honor = not auto_skip_honor
+    logger.info(f"Auto skip honor set to {auto_skip_honor}")
+
+
+def toggle_honor_lobby():
+    global auto_honor_lobby
+    auto_honor_lobby = not auto_honor_lobby
+    logger.info(f"Auto honor lobby set to {auto_honor_lobby}")
+
+
 def switch_screen():
     logger.info("Switching to lobby")
     push(open(Path("src/lobby/index.html"), encoding="utf-8").read())
     if auto_accept:
         push(
-            '<input hx-post="/lobby/queue/toggle" hx-swap-oob="true" hx-swap="none" type="checkbox" id="auto-accept-switch" checked>'
+            '<input hx-post="/lobby/queue/toggle-accept" hx-swap-oob="true" hx-swap="none" type="checkbox" id="auto-accept-switch" checked>'
+        )
+
+    if auto_honor_lobby:
+        push(
+            '<input hx-post="/lobby/queue/toggle-honor-skip" hx-swap-oob="true" hx-swap="none" type="checkbox" id="auto-accept-switch" checked>'
+        )
+
+    if auto_skip_honor:
+        push(
+            '<input hx-post="/lobby/queue/toggle-honor-lobby" hx-swap-oob="true" hx-swap="none" type="checkbox" id="auto-accept-switch" checked>'
         )

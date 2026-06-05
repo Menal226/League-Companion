@@ -19,7 +19,4 @@ def register(app: FastAPI):
                 html = await lcu.event_queue.get()
                 yield {"data": html}
 
-        lcu.event_queue.put_nowait(
-            open(Path("src/lobby/index.html"), encoding="utf-8").read()
-        )
         return EventSourceResponse(generator())

@@ -26,11 +26,21 @@
               Stop queue
             </button>
           </div>
+          <b id="queue_timer">Not in queue</b>
+        </div>
+        <div id="toggle-buttons">
           <div>
-            <input hx-post="/lobby/queue/toggle" hx-swap="none" type="checkbox" id="auto-accept-switch">
+            <input hx-post="/lobby/queue/toggle-accept" hx-swap="none" type="checkbox" id="auto-accept-switch">
             <b>Auto-accept queue</b>
           </div>
-          <b id="queue_timer">Not in queue</b>
+          <div>
+            <input hx-post="/lobby/queue/toggle-honor-skip" hx-swap="none" type="checkbox" id="auto-honor-skip-switch">
+            <b>Auto-skip honor</b>
+          </div>
+          <div>
+            <input hx-post="/lobby/queue/toggle-honor-lobby" hx-swap="none" type="checkbox" id="auto-honor-lobby-switch">
+            <b>Auto-honor lobby</b>
+          </div>
         </div>
       </div>
     </div>

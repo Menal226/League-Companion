@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 from lobby.api import register as register_l
 from default.api import register as register_def
 from champ_select.api import register as register_cs
+from honor.api import register as register_h
 
 
 @asynccontextmanager
@@ -29,6 +30,7 @@ def create_app() -> FastAPI:
     register_cs(api)
     register_def(api)
     register_l(api)
+    register_h(api)
     return api
 
 

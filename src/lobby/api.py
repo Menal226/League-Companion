@@ -21,9 +21,17 @@ def register(app: FastAPI):
         except Exception:
             logger.exception("Exception on /lobby/queue/stop")
 
-    @app.post("/lobby/queue/toggle")
+    @app.post("/lobby/queue/toggle-accept")
     async def queue_aa_toggle():
         lcu_l.toggle_autoaccept()
+
+    @app.post("/lobby/queue/toggle-honor-skip")
+    async def queue_aa_toggle():
+        lcu_l.toggle_honor_skip()
+
+    @app.post("/lobby/queue/toggle-honor-lobby")
+    async def queue_aa_toggle():
+        lcu_l.toggle_honor_lobby()
 
     @app.post("/lobby/create/{queueId}")
     async def create_lobby(queueId: int):

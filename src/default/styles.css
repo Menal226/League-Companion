@@ -50,6 +50,19 @@ html, body {
   user-select: none;
 }
 
+.honor-portrait {
+  width: 12vw;
+  user-select: none;
+  cursor: pointer;
+}
+
+.honor-portrait-disabled {
+  width: 12vw;
+  user-select: none;
+  cursor: none;
+  filter: grayscale(1);
+}
+
 #special-screen {
   display: flex;
   user-select: none;

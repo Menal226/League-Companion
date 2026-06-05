@@ -43,11 +43,11 @@ def start():
     # prevent circular import
     from champ_select import lcu as lcu_cs
     from lobby import lcu as lcu_l
+    from honor import lcu as lcu_h
 
     lcu_cs.register(connector)
     lcu_l.register(connector)
-    # force existing pages to reset
-    event_queue.put_nowait(open(Path("src/lobby/index.html"), encoding="utf-8").read())
+    lcu_h.register(connector)
     thread = threading.Thread(target=connector.start, daemon=True)
     thread.start()
 
@@ -74,6 +74,7 @@ async def screen_update(conn: Connection, event: WebsocketEventResponse):
     from lobby import lcu as lcu_l
     from in_game import lcu as lcu_ig
     from post_game import lcu as lcu_pg
+    from honor import lcu as lcu_h
 
     logger.info("CREATE/UPDATE /lol-gameflow/v1/session")
     global current_state
@@ -92,6 +93,9 @@ async def screen_update(conn: Connection, event: WebsocketEventResponse):
     elif state == "EndOfGame":
         if current_state != state:
             lcu_pg.switch_screen()
+    elif state == "PreEndOfGame":
+        if current_state != state:
+            lcu_h.switch_screen()
     else:
         return
     current_state = state
