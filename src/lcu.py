@@ -70,32 +70,49 @@ async def on_disconnect(_):
 
 @connector.ws.register("/lol-gameflow/v1/session", event_types=("CREATE", "UPDATE"))
 async def screen_update(conn: Connection, event: WebsocketEventResponse):
-    from champ_select import lcu as lcu_cs
-    from lobby import lcu as lcu_l
-    from in_game import lcu as lcu_ig
-    from post_game import lcu as lcu_pg
-    from honor import lcu as lcu_h
+    try:
+        from champ_select import lcu as lcu_cs
+        from lobby import lcu as lcu_l
+        from in_game import lcu as lcu_ig
+        from post_game import lcu as lcu_pg
+        from honor import lcu as lcu_h
 
-    logger.info("CREATE/UPDATE /lol-gameflow/v1/session")
-    global current_state
-    state = event.data.get("phase", "")
+        logger.info("CREATE/UPDATE /lol-gameflow/v1/session")
+        global current_state
+        state = event.data.get("phase", "")
 
-    if state == "ChampSelect":
-        if current_state != state:
-            lcu_cs.switch_screen()
-    elif state == "Lobby":
-        if current_state != state:
-            lcu_l.switch_screen()
-        await lcu_l.update_background(conn, event)
-    elif state == "InProgress":
-        if current_state != state:
-            lcu_ig.switch_screen()
-    elif state == "EndOfGame":
-        if current_state != state:
-            lcu_pg.switch_screen()
-    elif state == "PreEndOfGame":
-        if current_state != state:
-            lcu_h.switch_screen()
-    else:
-        return
-    current_state = state
+        if state == "ChampSelect":
+            if current_state != state:
+                lcu_cs.switch_screen()
+        elif state == "Lobby":
+            if current_state != state:
+                lcu_l.switch_screen()
+            await lcu_l.update_background(conn, event)
+        elif state == "InProgress":
+            if current_state != state:
+                lcu_ig.switch_screen()
+        elif state == "EndOfGame":
+            if current_state != state:
+                lcu_pg.switch_screen()
+        elif state == "PreEndOfGame":
+            if current_state != state:
+                lcu_h.switch_screen()
+        elif state == "WaitingForStats":
+            logger.info("Waiting for stats")
+            await asyncio.sleep(5)
+            resp = await conn.request("GET", "/lol-gameflow/v1/gameflow-phase")
+            if resp.status != 200:
+                await conn.request("POST", "/lol-end-of-game/v1/state/dismiss-stats")
+                logger.info("Skipped waiting for stats")
+            else:
+                data = await resp.json()
+                if data.data == "WaitingForStats":
+                    await conn.request(
+                        "POST", "/lol-end-of-game/v1/state/dismiss-stats"
+                    )
+                    logger.info("Skipped waiting for stats")
+        else:
+            return
+        current_state = state
+    except Exception:
+        logger.exception("Exception when switching screens")

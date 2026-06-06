@@ -5,6 +5,7 @@ import threading
 import time
 import webview
 import logging
+import datetime
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
 from fastapi import FastAPI
@@ -14,6 +15,7 @@ from lobby.api import register as register_l
 from default.api import register as register_def
 from champ_select.api import register as register_cs
 from honor.api import register as register_h
+from post_game.api import register as register_pg
 
 
 @asynccontextmanager
@@ -31,6 +33,7 @@ def create_app() -> FastAPI:
     register_def(api)
     register_l(api)
     register_h(api)
+    register_pg(api)
     return api
 
 
@@ -48,7 +51,7 @@ def setup_logging() -> None:
 
     formatter = logging.Formatter(
         fmt="[%(asctime)s] - %(levelname)-8s: %(name)s | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
+        datefmt="%d.%m.%Y. %H:%M:%S",
     )
 
     console = logging.StreamHandler()
@@ -56,7 +59,7 @@ def setup_logging() -> None:
     console.setFormatter(formatter)
 
     file_handler = RotatingFileHandler(
-        logs_dir / "companion.log",
+        logs_dir / f"{datetime.datetime.now().strftime("%d.%m.%Y. %H-%M-%S")}.log",
         encoding="utf-8",
     )
     file_handler.setLevel(logging.INFO)

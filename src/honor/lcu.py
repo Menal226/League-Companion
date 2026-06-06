@@ -16,6 +16,7 @@ def register(connector: Connector):
 
         if auto_skip_honor:
             await request("DELETE", "/lol-honor-v2/v1/ballot")
+            logger.info("Skipped honors")
             return
 
         honored = {
