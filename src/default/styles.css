@@ -153,3 +153,8 @@ html, body {
   transform: scale(1.03);
   opacity: 0.95;
 }
+
+b {
+  color: black;
+  filter: drop-shadow(0 0 3px white);
+}
