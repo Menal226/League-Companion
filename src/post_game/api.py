@@ -1,6 +1,5 @@
 import lcu
 import logging
-from lobby import lcu as lcu_l
 from fastapi import FastAPI
 
 logger = logging.getLogger(__name__)

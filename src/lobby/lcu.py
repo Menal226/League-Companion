@@ -5,10 +5,8 @@ from pathlib import Path
 from lcu_driver import Connector
 from lcu_driver.connection import Connection
 from lcu_driver.events.responses import WebsocketEventResponse
+from services.settings_service import Setting, get_setting, set_setting
 
-auto_accept = False
-auto_skip_honor = False
-auto_honor_lobby = False
 logger = logging.getLogger(__name__)
 
 
@@ -29,7 +27,9 @@ def register(connector: Connector):
 
     @connector.ws.register("/lol-matchmaking/v1/ready-check", event_types=("UPDATE",))
     async def on_queue_pop(conn: Connection, event: WebsocketEventResponse):
-        if event.data["playerResponse"] != "None" or not auto_accept:
+        if event.data["playerResponse"] != "None" or not await get_setting(
+            Setting.AUTO_ACCEPT_QUEUE
+        ):
             return
 
         logger.info("UPDATE /lol-matchmaking/v1/ready-check")
@@ -65,38 +65,33 @@ async def update_background(conn: Connection, event: WebsocketEventResponse):
     )
 
 
-def toggle_autoaccept():
-    global auto_accept
-    auto_accept = not auto_accept
-    logger.info(f"Autoaccept set to {auto_accept}")
+async def toggle_setting(setting: Setting):
+    try:
+        current_value = await get_setting(setting)
+        if current_value is None:
+            await set_setting(setting, True)
+            logger.info(f"Set {setting} to True")
+            return
+        await set_setting(setting, not current_value)
+        logger.info(f"Set {setting} to {not current_value}")
+    except Exception:
+        logger.exception(f"Exception when changing {setting}")
 
 
-def toggle_honor_skip():
-    global auto_skip_honor
-    auto_skip_honor = not auto_skip_honor
-    logger.info(f"Auto skip honor set to {auto_skip_honor}")
-
-
-def toggle_honor_lobby():
-    global auto_honor_lobby
-    auto_honor_lobby = not auto_honor_lobby
-    logger.info(f"Auto honor lobby set to {auto_honor_lobby}")
-
-
-def switch_screen():
+async def switch_screen():
     logger.info("Switching to lobby")
     push(open(Path("src/lobby/index.html"), encoding="utf-8").read())
-    if auto_accept:
+    if await get_setting(Setting.AUTO_ACCEPT_QUEUE):
         push(
             '<input hx-post="/lobby/queue/toggle-accept" hx-swap-oob="true" hx-swap="none" type="checkbox" id="auto-accept-switch" checked>'
         )
 
-    if auto_honor_lobby:
+    if await get_setting(Setting.SKIP_POST_GAME_HONOR):
         push(
-            '<input hx-post="/lobby/queue/toggle-honor-skip" hx-swap-oob="true" hx-swap="none" type="checkbox" id="auto-accept-switch" checked>'
+            '<input hx-post="/lobby/queue/toggle-honor-skip" hx-swap-oob="true" hx-swap="none" type="checkbox" id="auto-honor-skip-switch" checked>'
         )
 
-    if auto_skip_honor:
+    if await get_setting(Setting.AUTO_HONOR_LOBBY_POST_GAME):
         push(
-            '<input hx-post="/lobby/queue/toggle-honor-lobby" hx-swap-oob="true" hx-swap="none" type="checkbox" id="auto-accept-switch" checked>'
+            '<input hx-post="/lobby/queue/toggle-honor-lobby" hx-swap-oob="true" hx-swap="none" type="checkbox" id="auto-honor-lobby-switch" checked>'
         )

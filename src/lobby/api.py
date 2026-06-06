@@ -3,6 +3,8 @@ import logging
 from lobby import lcu as lcu_l
 from fastapi import FastAPI
 
+from services.settings_service import Setting
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,15 +25,15 @@ def register(app: FastAPI):
 
     @app.post("/lobby/queue/toggle-accept")
     async def queue_aa_toggle():
-        lcu_l.toggle_autoaccept()
+        await lcu_l.toggle_setting(Setting.AUTO_ACCEPT_QUEUE)
 
     @app.post("/lobby/queue/toggle-honor-skip")
     async def queue_aa_toggle():
-        lcu_l.toggle_honor_skip()
+        await lcu_l.toggle_setting(Setting.SKIP_POST_GAME_HONOR)
 
     @app.post("/lobby/queue/toggle-honor-lobby")
     async def queue_aa_toggle():
-        lcu_l.toggle_honor_lobby()
+        await lcu_l.toggle_setting(Setting.AUTO_HONOR_LOBBY_POST_GAME)
 
     @app.post("/lobby/create/{queueId}")
     async def create_lobby(queueId: int):

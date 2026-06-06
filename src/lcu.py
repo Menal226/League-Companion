@@ -58,6 +58,7 @@ async def on_connect(conn: Connection):
     connection = conn
     connector_loop = asyncio.get_event_loop()
     logger.info("Lcu driver started")
+    # maybe add pushing of setting here aswell
 
 
 @connector.close
@@ -86,7 +87,7 @@ async def screen_update(conn: Connection, event: WebsocketEventResponse):
                 lcu_cs.switch_screen()
         elif state == "Lobby":
             if current_state != state:
-                lcu_l.switch_screen()
+                await lcu_l.switch_screen()
             await lcu_l.update_background(conn, event)
         elif state == "InProgress":
             if current_state != state:

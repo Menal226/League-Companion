@@ -5,6 +5,7 @@ from lcu_driver import Connector
 from lcu_driver.connection import Connection
 from lcu_driver.events.responses import WebsocketEventResponse
 from services.champion_service import get_portrait
+from services.settings_service import Setting, get_setting
 
 logger = logging.getLogger(__name__)
 
@@ -12,9 +13,7 @@ logger = logging.getLogger(__name__)
 def register(connector: Connector):
     @connector.ws.register("/lol-honor-v2/v1/ballot", event_types=("CREATE", "UPDATE"))
     async def on_honor_update(conn: Connection, event: WebsocketEventResponse):
-        from lobby.lcu import auto_skip_honor, auto_honor_lobby
-
-        if auto_skip_honor:
+        if await get_setting(Setting.SKIP_POST_GAME_HONOR):
             await request("DELETE", "/lol-honor-v2/v1/ballot")
             logger.info("Skipped honors")
             return
