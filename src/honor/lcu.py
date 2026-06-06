@@ -15,7 +15,7 @@ def register(connector: Connector):
         from lobby.lcu import auto_skip_honor, auto_honor_lobby
 
         if auto_skip_honor:
-            await request("POST", "/lol-honor-v2/v1/vote-completion")
+            await request("DELETE", "/lol-honor-v2/v1/ballot")
             return
 
         honored = {
