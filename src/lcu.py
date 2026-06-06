@@ -107,7 +107,7 @@ async def screen_update(conn: Connection, event: WebsocketEventResponse):
                 logger.info("Skipped waiting for stats")
             else:
                 data = await resp.json()
-                if data.data == "WaitingForStats":
+                if data == "WaitingForStats":
                     await conn.request(
                         "POST", "/lol-end-of-game/v1/state/dismiss-stats"
                     )
