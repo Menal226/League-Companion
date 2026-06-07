@@ -78,7 +78,6 @@ if __name__ == "__main__":
     server_thread = threading.Thread(target=start_server, daemon=True)
     server_thread.start()
 
-    time.sleep(1.5)
     window = webview.create_window(
         title="League Companion", url="http://127.0.0.1:8000", width=1280, height=800
     )
