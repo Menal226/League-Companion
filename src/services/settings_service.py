@@ -11,6 +11,7 @@ class Setting(Enum):
     AUTO_ACCEPT_QUEUE = "autoAcceptQueue"
     SKIP_POST_GAME_HONOR = "skipPostGameHonor"
     AUTO_HONOR_LOBBY_POST_GAME = "autoHonorLobbyPostGame"
+    AUTO_CLAIM_BATTLEPASS = "autoClaimBattlepass"
 
     def __str__(self) -> str:
         return self.value

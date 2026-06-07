@@ -83,15 +83,20 @@ async def switch_screen():
     push(open(Path("src/lobby/index.html"), encoding="utf-8").read())
     if await get_setting(Setting.AUTO_ACCEPT_QUEUE):
         push(
-            '<input hx-post="/lobby/queue/toggle-accept" hx-swap-oob="true" hx-swap="none" type="checkbox" id="auto-accept-switch" checked>'
+            '<input hx-post="/settings/queue/toggle-accept" hx-swap-oob="true" hx-swap="none" type="checkbox" id="auto-accept-switch" checked>'
         )
 
     if await get_setting(Setting.SKIP_POST_GAME_HONOR):
         push(
-            '<input hx-post="/lobby/queue/toggle-honor-skip" hx-swap-oob="true" hx-swap="none" type="checkbox" id="auto-honor-skip-switch" checked>'
+            '<input hx-post="/settings/queue/toggle-honor-skip" hx-swap-oob="true" hx-swap="none" type="checkbox" id="auto-honor-skip-switch" checked>'
         )
 
     if await get_setting(Setting.AUTO_HONOR_LOBBY_POST_GAME):
         push(
-            '<input hx-post="/lobby/queue/toggle-honor-lobby" hx-swap-oob="true" hx-swap="none" type="checkbox" id="auto-honor-lobby-switch" checked>'
+            '<input hx-post="/settings/queue/toggle-honor-lobby" hx-swap-oob="true" hx-swap="none" type="checkbox" id="auto-honor-lobby-switch" checked>'
+        )
+
+    if await get_setting(Setting.AUTO_CLAIM_BATTLEPASS):
+        push(
+            '<input hx-post="/settings/toggle-auto-claim-rewards" hx-swap-oob="true" hx-swap="none" type="checkbox" id="auto-claim-rewards-switch" checked>'
         )

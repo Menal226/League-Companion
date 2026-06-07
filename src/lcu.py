@@ -1,10 +1,10 @@
 import asyncio
 import threading
 import logging
-from pathlib import Path
 from lcu_driver import Connector
 from aiohttp import ClientResponse
 from lcu_driver.connection import Connection
+from services.settings_service import get_setting, Setting
 from lcu_driver.events.responses import WebsocketEventResponse
 
 connector = Connector()
@@ -54,11 +54,13 @@ def start():
 
 @connector.ready
 async def on_connect(conn: Connection):
+    from lobby import lcu as lcu_l
+
     global connection, connector_loop
     connection = conn
     connector_loop = asyncio.get_event_loop()
     logger.info("Lcu driver started")
-    # maybe add pushing of setting here aswell
+    await lcu_l.switch_screen()
 
 
 @connector.close
@@ -117,3 +119,38 @@ async def screen_update(conn: Connection, event: WebsocketEventResponse):
         current_state = state
     except Exception:
         logger.exception("Exception when switching screens")
+
+
+@connector.ws.register("/lol-rewards/v1/grants", event_types=("CREATE", "UPDATE"))
+async def on_new_reward(conn: Connection, event: WebsocketEventResponse):
+    try:
+        if not await get_setting(Setting.AUTO_CLAIM_BATTLEPASS):
+            return
+
+        for reward in event.data:
+            if reward.get("info", {}).get("status") != "PENDING_SELECTION":
+                continue
+            resp = await conn.request(
+                "POST",
+                f"/lol-rewards/v1/grants/{reward.get("info", {}).get("id")}/select",
+                json={
+                    "grantId": reward.get("info", {}).get("id"),
+                    "rewardGroupId": reward.get("info", {}).get("rewardGroupId"),
+                    "selections": [
+                        subreward.get("id")
+                        for subreward in reward.get("rewardGroup", {}).get(
+                            "rewards", []
+                        )
+                    ],
+                },
+            )
+            if resp.status == 200:
+                logger.info(
+                    f"Succesfully claimed: {", ".join([subreward.get("id") for subreward in reward.get("rewardGroup", {}).get("rewards", [])])}"
+                )
+            else:
+                logger.warning(
+                    f"Responce status code {resp.status} when claiming {", ".join([subreward.get("id") for subreward in reward.get("rewardGroup", {}).get("rewards", [])])}"
+                )
+    except Exception:
+        logging.exception("Exception trying to claim rewards")

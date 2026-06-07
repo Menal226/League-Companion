@@ -23,17 +23,21 @@ def register(app: FastAPI):
         except Exception:
             logger.exception("Exception on /lobby/queue/stop")
 
-    @app.post("/lobby/queue/toggle-accept")
-    async def queue_aa_toggle():
+    @app.post("/settings/queue/toggle-accept")
+    async def settings_autoaccept_queue():
         await lcu_l.toggle_setting(Setting.AUTO_ACCEPT_QUEUE)
 
-    @app.post("/lobby/queue/toggle-honor-skip")
-    async def queue_aa_toggle():
+    @app.post("/settings/queue/toggle-honor-skip")
+    async def settings_skip_honor():
         await lcu_l.toggle_setting(Setting.SKIP_POST_GAME_HONOR)
 
-    @app.post("/lobby/queue/toggle-honor-lobby")
-    async def queue_aa_toggle():
+    @app.post("/settings/queue/toggle-honor-lobby")
+    async def settings_honor_lobby():
         await lcu_l.toggle_setting(Setting.AUTO_HONOR_LOBBY_POST_GAME)
+
+    @app.post("/settings/toggle-auto-claim-rewards")
+    async def settings_auto_claim_battlepass():
+        await lcu_l.toggle_setting(Setting.AUTO_CLAIM_BATTLEPASS)
 
     @app.post("/lobby/create/{queueId}")
     async def create_lobby(queueId: int):
